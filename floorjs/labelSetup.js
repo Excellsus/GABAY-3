@@ -31,7 +31,7 @@ document.addEventListener("DOMContentLoaded", function () {
     
     // Try multiple ways to find the room group
     let roomGroup = null;
-    let roomPath = null;
+    let roomElement = null;
     
     // Try by office ID first
     roomGroup = document.getElementById(`g${officeId}`);
@@ -43,11 +43,11 @@ document.addEventListener("DOMContentLoaded", function () {
       if (roomMatch && roomMatch[1]) {
         const roomNum = roomMatch[1];
         
-        // First, try direct path match with the exact format in your SVG
-        roomPath = document.getElementById(`room-${roomNum}-1`);
-        if (roomPath) {
-          console.log(`Found path directly with ID room-${roomNum}-1 for office ${office.name}`);
-          roomGroup = roomPath.closest('g');
+        // First, try direct element match with the exact format in your SVG
+        roomElement = document.getElementById(`room-${roomNum}-1`);
+        if (roomElement) {
+          console.log(`Found element directly with ID room-${roomNum}-1 for office ${office.name}`);
+          roomGroup = roomElement.closest('g');
         }
         
         // If still not found, try other patterns
@@ -79,17 +79,17 @@ document.addEventListener("DOMContentLoaded", function () {
       return;
     }
     
-    // Find the path element inside the group if we haven't already
-    if (!roomPath) {
-      roomPath = roomGroup.querySelector('path');
+    // Find the path or rect element inside the group if we haven't already
+    if (!roomElement) {
+      roomElement = roomGroup.querySelector('path, rect');
     }
     
     const textEl = roomGroup.querySelector('text');
     
-    if (roomPath) {
-      roomPath.classList.toggle("room-inactive", !isActive);
-      roomPath.classList.add("interactive-room"); // Ensure interactive-room class is added
-      roomPath.style.cursor = "pointer";
+    if (roomElement) {
+      roomElement.classList.toggle("room-inactive", !isActive);
+      roomElement.classList.add("interactive-room"); // Ensure interactive-room class is added
+      roomElement.style.cursor = "pointer";
     }
     if (textEl) textEl.classList.toggle("text-label-inactive", !isActive);
     
@@ -171,7 +171,7 @@ document.addEventListener("DOMContentLoaded", function () {
       
       // Find room elements using multiple methods
       let roomGroup = null;
-      let roomPath = null;
+      let roomElement = null;
       
       // Try first by direct group ID match
       roomGroup = document.getElementById(`g${id}`);
@@ -183,11 +183,11 @@ document.addEventListener("DOMContentLoaded", function () {
         if (roomMatch && roomMatch[1]) {
           const roomNum = roomMatch[1];
           
-          // First, try direct path match with the exact format in your SVG
-          roomPath = document.getElementById(`room-${roomNum}-1`);
-          if (roomPath) {
-            console.log(`Found path directly with ID room-${roomNum}-1 for office ${officeName}`);
-            roomGroup = roomPath.closest('g');
+          // First, try direct element match with the exact format in your SVG
+          roomElement = document.getElementById(`room-${roomNum}-1`);
+          if (roomElement) {
+            console.log(`Found element directly with ID room-${roomNum}-1 for office ${officeName}`);
+            roomGroup = roomElement.closest('g');
           }
           
           // If still not found, try other patterns
@@ -221,30 +221,57 @@ document.addEventListener("DOMContentLoaded", function () {
       
       console.log(`Processing room for office ${officeName}, using element: ${roomGroup.id}`);
       
-      // Find the path element inside the group if we haven't already
-      if (!roomPath) {
-        roomPath = roomGroup.querySelector('path');
-        // If we found a path element, try to see if it has a room ID that matches our format
-        if (roomPath && !roomPath.id && locationStr) {
-          const roomMatch = locationStr.match(/room-(\d+)/);
-          if (roomMatch && roomMatch[1]) {
-            console.log(`Found path without ID inside group ${roomGroup.id} for office ${officeName}`);
-          }
-        }
+      // Find the path or rect element inside the group if we haven't already
+      if (!roomElement) {
+        roomElement = roomGroup.querySelector('path, rect');
       }
       
       // Find text element for the label
       const textEl = roomGroup.querySelector('text');
       
       // Log what we found for debugging
-      console.log(`  Room path found: ${roomPath ? roomPath.id : 'none'}`);
+      console.log(`  Room element found: ${roomElement ? roomElement.id : 'none'}`);
       console.log(`  Text element found: ${!!textEl}`);
       
-      // Set office ID on both group and path
+      // Set office ID on both group and element
       roomGroup.dataset.officeId = id;
-      if (roomPath) {
-        roomPath.dataset.officeId = id;
-        roomPath.classList.add("interactive-room"); // Add interactive class to path
+      if (roomElement) {
+        roomElement.dataset.officeId = id;
+        roomElement.classList.add("interactive-room"); // Add interactive class to element
+        roomElement.style.cursor = "pointer";
+      }
+
+      // Add click event to both the group and the element
+      const handleRoomClick = function(e) {
+        // Check if we're in edit mode - if so, don't open the panel
+        if (document.body.classList.contains('edit-mode-active')) {
+          console.log('In edit mode, not opening panel');
+          return;
+        }
+        
+        e.stopPropagation();
+        e.preventDefault(); // Prevent any default behavior
+        
+        currentSelectedOffice = office;
+        panelOfficeName.textContent = office.name || "N/A";
+
+        const isActive = officeActiveStates[idStr];
+        officeActiveToggle.checked = isActive;
+        officeStatusText.textContent = isActive ? "Active" : "Inactive";
+        officeStatusText.style.color = isActive ? "#4CAF50" : "#f44336";
+
+        officeDetailsPanel.classList.add("open");
+        console.log(`Opening panel for office ${officeName} (click on ${e.currentTarget.tagName} #${e.currentTarget.id})`);
+      };
+
+      // Add click handler to both the group and the element
+      roomGroup.addEventListener("click", handleRoomClick, true); // Use capture phase
+      if (roomElement) {
+        roomElement.addEventListener("click", handleRoomClick, true); // Use capture phase
+        // Ensure the element is interactive
+        roomElement.classList.add("interactive-room");
+        roomElement.style.cursor = "pointer";
+        roomElement.style.pointerEvents = "auto"; // Ensure click events are captured
       }
 
       if (textEl) {
@@ -297,26 +324,8 @@ document.addEventListener("DOMContentLoaded", function () {
           !officeActiveStates[idStr]
         );
 
-        // Add click listener to textEl to open the panel, but only when not in edit mode
-        textEl.addEventListener("click", function (e) {
-          // Check if we're in edit mode - if so, don't open the panel
-          if (document.body.classList.contains('edit-mode-active')) {
-            console.log('In edit mode, not opening panel');
-            return;
-          }
-          
-          e.stopPropagation();
-          currentSelectedOffice = office;
-          panelOfficeName.textContent = office.name || "N/A";
-
-          const isActive = officeActiveStates[idStr];
-          officeActiveToggle.checked = isActive;
-          officeStatusText.textContent = isActive ? "Active" : "Inactive";
-          officeStatusText.style.color = isActive ? "#4CAF50" : "#f44336";
-
-          officeDetailsPanel.classList.add("open");
-          console.log(`Opening panel for office ${officeName}`);
-        });
+        // Add click listener to textEl
+        textEl.addEventListener("click", handleRoomClick);
 
         // Add tooltip to textEl
         if (tooltip) {
@@ -337,39 +346,18 @@ document.addEventListener("DOMContentLoaded", function () {
         }
       }
 
-      if (roomPath) {
-        roomPath.classList.add("interactive-room");
-        roomPath.style.cursor = "pointer";
+      if (roomElement) {
+        roomElement.classList.add("interactive-room");
+        roomElement.style.cursor = "pointer";
         
         // Apply active/inactive styling
         if (!officeActiveStates[idStr]) {
-          roomPath.classList.add("room-inactive");
+          roomElement.classList.add("room-inactive");
           if (textEl) textEl.classList.add("text-label-inactive");
         }
 
-        // Add click event to the room path, but only when not in edit mode
-        roomPath.addEventListener("click", function (e) {
-          // Check if we're in edit mode - if so, don't open the panel
-          if (document.body.classList.contains('edit-mode-active')) {
-            console.log('In edit mode, not opening panel');
-            return;
-          }
-          
-          e.stopPropagation();
-          currentSelectedOffice = office;
-          panelOfficeName.textContent = office.name || "N/A";
-
-          const isActive = officeActiveStates[idStr];
-          officeActiveToggle.checked = isActive;
-          officeStatusText.textContent = isActive ? "Active" : "Inactive";
-          officeStatusText.style.color = isActive ? "#4CAF50" : "#f44336";
-
-          officeDetailsPanel.classList.add("open");
-          console.log(`Opening panel for office ${officeName} (click on path)`);
-        });
-
         if (tooltip) {
-          roomPath.addEventListener("mousemove", function (e) {
+          roomElement.addEventListener("mousemove", function (e) {
             // Don't show tooltip if in edit mode
             if (document.body.classList.contains('edit-mode-active')) {
               return;
@@ -381,7 +369,7 @@ document.addEventListener("DOMContentLoaded", function () {
             tooltip.style.top = e.pageY + 15 + "px";
           });
 
-          roomPath.addEventListener("mouseout", function () {
+          roomElement.addEventListener("mouseout", function () {
             tooltip.style.display = "none";
           });
         }

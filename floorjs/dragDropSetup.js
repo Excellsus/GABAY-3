@@ -2,7 +2,7 @@
 // Get all groups and paths that might be rooms
 const allGroups = document.querySelectorAll('g[id^="g"]');
 // Grab both patterns of room IDs based on your updated SVG structure
-const allPaths = document.querySelectorAll('path[id^="room"], path[id^="room-"]'); 
+const allPaths = document.querySelectorAll('path[id^="room"], path[id^="room-"], rect[id^="room"], rect[id^="room-"]'); 
 
 // Function to identify real rooms
 function identifyRooms() {
@@ -20,45 +20,45 @@ function identifyRooms() {
         });
     }
     
-    // Second, check if there are any direct room paths with format room-X-1
-    const roomPaths = document.querySelectorAll('path[id^="room-"]');
-    if (roomPaths.length > 0) {
-        console.log(`Found ${roomPaths.length} paths with room- prefix IDs`);
-        roomPaths.forEach(path => {
-            const parentGroup = path.closest('g');
+    // Second, check if there are any direct room paths/rects with format room-X-1
+    const roomElements = document.querySelectorAll('path[id^="room-"], rect[id^="room-"]');
+    if (roomElements.length > 0) {
+        console.log(`Found ${roomElements.length} elements with room- prefix IDs`);
+        roomElements.forEach(element => {
+            const parentGroup = element.closest('g');
             if (parentGroup) {
                 parentGroup.setAttribute('data-room', 'true');
-                // If the path has an office ID, copy it to the parent group
-                if (path.dataset.officeId) {
-                    parentGroup.dataset.officeId = path.dataset.officeId;
+                // If the element has an office ID, copy it to the parent group
+                if (element.dataset.officeId) {
+                    parentGroup.dataset.officeId = element.dataset.officeId;
                 }
-                console.log(`Marked ${parentGroup.id} as a room based on path with id ${path.id}`);
+                console.log(`Marked ${parentGroup.id} as a room based on element with id ${element.id}`);
                 roomsIdentified++;
             } else {
-                // If the path isn't in a group, mark it directly
-                path.setAttribute('data-room', 'true');
-                console.log(`Marked path ${path.id} as a room directly`);
+                // If the element isn't in a group, mark it directly
+                element.setAttribute('data-room', 'true');
+                console.log(`Marked element ${element.id} as a room directly`);
                 roomsIdentified++;
             }
         });
     }
     
-    // Third, check for paths with room prefix but without dash
-    const oldFormatRoomPaths = document.querySelectorAll('path[id^="room"]:not([id^="room-"])');
-    if (oldFormatRoomPaths.length > 0) {
-        console.log(`Found ${oldFormatRoomPaths.length} paths with 'room' prefix IDs (old format)`);
-        oldFormatRoomPaths.forEach(path => {
-            const parentGroup = path.closest('g');
+    // Third, check for elements with room prefix but without dash
+    const oldFormatRoomElements = document.querySelectorAll('path[id^="room"]:not([id^="room-"]), rect[id^="room"]:not([id^="room-"])');
+    if (oldFormatRoomElements.length > 0) {
+        console.log(`Found ${oldFormatRoomElements.length} elements with 'room' prefix IDs (old format)`);
+        oldFormatRoomElements.forEach(element => {
+            const parentGroup = element.closest('g');
             if (parentGroup) {
                 parentGroup.setAttribute('data-room', 'true');
-                if (path.dataset.officeId) {
-                    parentGroup.dataset.officeId = path.dataset.officeId;
+                if (element.dataset.officeId) {
+                    parentGroup.dataset.officeId = element.dataset.officeId;
                 }
-                console.log(`Marked ${parentGroup.id} as a room based on path with old format id ${path.id}`);
+                console.log(`Marked ${parentGroup.id} as a room based on element with old format id ${element.id}`);
                 roomsIdentified++;
             } else {
-                path.setAttribute('data-room', 'true');
-                console.log(`Marked path ${path.id} as a room directly (old format)`);
+                element.setAttribute('data-room', 'true');
+                console.log(`Marked element ${element.id} as a room directly (old format)`);
                 roomsIdentified++;
             }
         });
@@ -75,17 +75,17 @@ function identifyRooms() {
         }
     });
     
-    // Fifth, check for paths with interactive-room class (added by labelSetup.js)
-    const interactivePaths = document.querySelectorAll('path.interactive-room');
-    if (interactivePaths.length > 0) {
-        console.log(`Found ${interactivePaths.length} paths with interactive-room class`);
-        interactivePaths.forEach(path => {
-            const parentGroup = path.closest('g');
+    // Fifth, check for elements with interactive-room class (added by labelSetup.js)
+    const interactiveElements = document.querySelectorAll('path.interactive-room, rect.interactive-room');
+    if (interactiveElements.length > 0) {
+        console.log(`Found ${interactiveElements.length} elements with interactive-room class`);
+        interactiveElements.forEach(element => {
+            const parentGroup = element.closest('g');
             if (parentGroup) {
                 parentGroup.setAttribute('data-room', 'true');
-                // If the path has an office ID, copy it to the parent group
-                if (path.dataset.officeId) {
-                    parentGroup.dataset.officeId = path.dataset.officeId;
+                // If the element has an office ID, copy it to the parent group
+                if (element.dataset.officeId) {
+                    parentGroup.dataset.officeId = element.dataset.officeId;
                 }
                 console.log(`Marked ${parentGroup.id} as a room based on interactive-room class`);
                 roomsIdentified++;
@@ -93,25 +93,25 @@ function identifyRooms() {
         });
     }
     
-    // Sixth, try to find paths with the expected room IDs directly
-    console.log('Trying to find rooms by looking for specific path IDs');
+    // Sixth, try to find elements with the expected room IDs directly
+    console.log('Trying to find rooms by looking for specific element IDs');
     
-    // Explicitly check for paths that match the new pattern room-{X}-1
-    const roomPatternPaths = Array.from(document.querySelectorAll('path'))
-        .filter(path => path.id && (path.id.match(/room-\d+-\d+/) || path.id.match(/room\d+-\d+/)));
+    // Explicitly check for elements that match the new pattern room-{X}-1
+    const roomPatternElements = Array.from(document.querySelectorAll('path, rect'))
+        .filter(element => element.id && (element.id.match(/room-\d+-\d+/) || element.id.match(/room\d+-\d+/)));
         
-    if (roomPatternPaths.length > 0) {
-        console.log(`Found ${roomPatternPaths.length} paths with room pattern IDs`);
-        roomPatternPaths.forEach(path => {
-            const parentGroup = path.closest('g');
+    if (roomPatternElements.length > 0) {
+        console.log(`Found ${roomPatternElements.length} elements with room pattern IDs`);
+        roomPatternElements.forEach(element => {
+            const parentGroup = element.closest('g');
             if (parentGroup) {
                 parentGroup.setAttribute('data-room', 'true');
-                console.log(`Marked ${parentGroup.id} as a room based on path ID ${path.id}`);
+                console.log(`Marked ${parentGroup.id} as a room based on element ID ${element.id}`);
                 roomsIdentified++;
             } else {
-                // If the path isn't in a group, mark it directly
-                path.setAttribute('data-room', 'true');
-                console.log(`Marked path ${path.id} as a room directly`);
+                // If the element isn't in a group, mark it directly
+                element.setAttribute('data-room', 'true');
+                console.log(`Marked element ${element.id} as a room directly`);
                 roomsIdentified++;
             }
         });
@@ -124,10 +124,10 @@ function identifyRooms() {
         // Exclude the known non-room groups - add or modify based on your SVG structure
         const excludedIds = ['g199-8', 'g2-8', 'g176-6', 'g187-3', 'g187-2-0', 'g193-6', 'g196-5'];
         Array.from(allGroups).forEach(group => {
-            // Check if this group has a path child - rooms should have path elements
-            const hasPath = group.querySelector('path') !== null;
+            // Check if this group has a path or rect child - rooms should have these elements
+            const hasRoomElement = group.querySelector('path, rect') !== null;
             
-            if (hasPath && !excludedIds.includes(group.id)) {
+            if (hasRoomElement && !excludedIds.includes(group.id)) {
                 group.setAttribute('data-room', 'true');
                 console.log(`Marked ${group.id} as a room using exclusion method`);
                 roomsIdentified++;
@@ -139,11 +139,11 @@ function identifyRooms() {
 
     // Deduplicate - remove any rooms we may have counted multiple times
     const allRoomGroups = document.querySelectorAll('g[data-room="true"]');
-    const allRoomPaths = document.querySelectorAll('path[data-room="true"]');
+    const allRoomElements = document.querySelectorAll('path[data-room="true"], rect[data-room="true"]');
     
     // Log all identified rooms 
-    const identifiedRooms = Array.from(allRoomGroups).concat(Array.from(allRoomPaths));
-    console.log(`Total rooms identified: ${identifiedRooms.length} (${allRoomGroups.length} groups, ${allRoomPaths.length} standalone paths)`);
+    const identifiedRooms = Array.from(allRoomGroups).concat(Array.from(allRoomElements));
+    console.log(`Total rooms identified: ${identifiedRooms.length} (${allRoomGroups.length} groups, ${allRoomElements.length} standalone elements)`);
     
     // Debug output - list all identified rooms
     identifiedRooms.forEach((room, index) => {
@@ -205,10 +205,10 @@ function enableDragAndDrop() {
     
     // Make each room draggable
     rooms.forEach(room => {
-        // Find the path element inside the group
-        const pathElement = room.querySelector('path');
-        if (!pathElement) {
-            console.warn(`No path element found in room group ${room.id}`);
+        // Find the path or rect element inside the group
+        const roomElement = room.querySelector('path, rect');
+        if (!roomElement) {
+            console.warn(`No path or rect element found in room group ${room.id}`);
             return;
         }
         
@@ -224,7 +224,12 @@ function enableDragAndDrop() {
         room.addEventListener('mouseenter', handleRoomMouseEnter, true);
         room.addEventListener('mouseleave', handleRoomMouseLeave, true);
 
-        console.log(`Added event listeners to room ${room.id}`);
+        // Also add event listeners to the room element
+        roomElement.addEventListener('mousedown', handleMouseDown, true);
+        roomElement.addEventListener('mouseenter', handleRoomMouseEnter, true);
+        roomElement.addEventListener('mouseleave', handleRoomMouseLeave, true);
+
+        console.log(`Added event listeners to room ${room.id} and its element`);
     });
     
     // Disable pan and zoom initially - we'll re-enable it when not over a room
@@ -353,11 +358,11 @@ function handleMouseMove(e) {
     const roomUnderCursor = elemUnderCursor ? elemUnderCursor.closest('g[data-room="true"]') : null;
     
     // Remove previous drag-target class from all rooms
-    rooms.forEach(room => {
-        if (room !== draggedElement) {
+        rooms.forEach(room => {
+            if (room !== draggedElement) {
             room.classList.remove('drag-target');
-        }
-    });
+            }
+        });
     
     // Add visual feedback for potential drop targets
     if (roomUnderCursor && roomUnderCursor !== draggedElement) {
