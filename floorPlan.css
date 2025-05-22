@@ -7,8 +7,7 @@ body {
     2px 0 4px -1px rgba(0, 0, 0, 0.03);
 }
 .card-shadow {
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05),
-    0 2px 4px -1px rgba(0, 0, 0, 0.03);
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 }
 
 /* --- SVG Container Styles (Essential for Pan/Zoom) --- */
@@ -42,6 +41,22 @@ g[id^="g"]:hover path {
 /* Active room interaction styles */
 .interactive-room {
   cursor: pointer;
+}
+
+/* Specific targeting for room paths */
+path[id^="room-"] {
+  cursor: pointer;
+  /* Add the class programmatically */
+}
+
+/* Target specific room groups by their ID patterns */
+g[id^="g"] path[id^="room-"] {
+  cursor: pointer;
+}
+
+/* Ensure all paths within groups that are rooms have the pointer cursor */
+g[data-room="true"] path {
+  cursor: pointer !important;
 }
 
 /* Drag and drop related styles */
@@ -1010,6 +1025,13 @@ input:checked + .slider:before {
 .slider.round:before {
   border-radius: 50%;
 }
+
+/* Card shadow for the floor plan container */
+.card-shadow {
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+
 
 /* Card shadow for the floor plan container */
 .card-shadow {

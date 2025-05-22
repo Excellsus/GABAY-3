@@ -1,39 +1,156 @@
-// Get all room elements - UPDATED VERSION V3
-// Use a simpler selector to get all groups first
+// Get all room elements - UPDATED VERSION
+// Get all groups and paths that might be rooms
 const allGroups = document.querySelectorAll('g[id^="g"]');
+// Grab both patterns of room IDs based on your updated SVG structure
+const allPaths = document.querySelectorAll('path[id^="room"], path[id^="room-"]'); 
 
 // Function to identify real rooms
 function identifyRooms() {
     console.log('Identifying room elements...');
+    let roomsIdentified = 0;
     
-    // First, check for inkscape:label attributes that contain "room"
+    // First, check if any groups already have data-office-id attributes (set by labelSetup.js)
+    const groupsWithOfficeId = document.querySelectorAll('g[data-office-id]');
+    if (groupsWithOfficeId.length > 0) {
+        console.log(`Found ${groupsWithOfficeId.length} groups with data-office-id attributes`);
+        groupsWithOfficeId.forEach(group => {
+            group.setAttribute('data-room', 'true');
+            console.log(`Marked ${group.id} as a room based on data-office-id`);
+            roomsIdentified++;
+        });
+    }
+    
+    // Second, check if there are any direct room paths with format room-X-1
+    const roomPaths = document.querySelectorAll('path[id^="room-"]');
+    if (roomPaths.length > 0) {
+        console.log(`Found ${roomPaths.length} paths with room- prefix IDs`);
+        roomPaths.forEach(path => {
+            const parentGroup = path.closest('g');
+            if (parentGroup) {
+                parentGroup.setAttribute('data-room', 'true');
+                // If the path has an office ID, copy it to the parent group
+                if (path.dataset.officeId) {
+                    parentGroup.dataset.officeId = path.dataset.officeId;
+                }
+                console.log(`Marked ${parentGroup.id} as a room based on path with id ${path.id}`);
+                roomsIdentified++;
+            } else {
+                // If the path isn't in a group, mark it directly
+                path.setAttribute('data-room', 'true');
+                console.log(`Marked path ${path.id} as a room directly`);
+                roomsIdentified++;
+            }
+        });
+    }
+    
+    // Third, check for paths with room prefix but without dash
+    const oldFormatRoomPaths = document.querySelectorAll('path[id^="room"]:not([id^="room-"])');
+    if (oldFormatRoomPaths.length > 0) {
+        console.log(`Found ${oldFormatRoomPaths.length} paths with 'room' prefix IDs (old format)`);
+        oldFormatRoomPaths.forEach(path => {
+            const parentGroup = path.closest('g');
+            if (parentGroup) {
+                parentGroup.setAttribute('data-room', 'true');
+                if (path.dataset.officeId) {
+                    parentGroup.dataset.officeId = path.dataset.officeId;
+                }
+                console.log(`Marked ${parentGroup.id} as a room based on path with old format id ${path.id}`);
+                roomsIdentified++;
+            } else {
+                path.setAttribute('data-room', 'true');
+                console.log(`Marked path ${path.id} as a room directly (old format)`);
+                roomsIdentified++;
+            }
+        });
+    }
+    
+    // Fourth, check for inkscape:label attributes that contain "room"
     allGroups.forEach(group => {
         // Check if this group has a label with "room" in it
         const labelAttr = group.getAttribute('inkscape:label');
         if (labelAttr && labelAttr.toLowerCase().includes('room')) {
             group.setAttribute('data-room', 'true');
             console.log(`Marked ${group.id} as a room based on label: ${labelAttr}`);
+            roomsIdentified++;
         }
     });
     
-    // If no rooms were identified by labels, fallback to the exclusion method
-    const roomsIdentified = document.querySelectorAll('g[data-room="true"]').length;
-    if (roomsIdentified === 0) {
-        console.warn('No rooms identified by inkscape:label. Falling back to exclusion method.');
-        
-        // Exclude the known non-room groups
-        const excludedIds = ['g199-8', 'g2-8', 'g176-6', 'g187-3', 'g187-2-0', 'g193-6', 'g196-5'];
-        Array.from(allGroups).forEach(group => {
-            if (!excludedIds.includes(group.id)) {
-                group.setAttribute('data-room', 'true');
-                console.log(`Marked ${group.id} as a room using exclusion method`);
-            } else {
-                console.log(`Excluded ${group.id} from being a room`);
+    // Fifth, check for paths with interactive-room class (added by labelSetup.js)
+    const interactivePaths = document.querySelectorAll('path.interactive-room');
+    if (interactivePaths.length > 0) {
+        console.log(`Found ${interactivePaths.length} paths with interactive-room class`);
+        interactivePaths.forEach(path => {
+            const parentGroup = path.closest('g');
+            if (parentGroup) {
+                parentGroup.setAttribute('data-room', 'true');
+                // If the path has an office ID, copy it to the parent group
+                if (path.dataset.officeId) {
+                    parentGroup.dataset.officeId = path.dataset.officeId;
+                }
+                console.log(`Marked ${parentGroup.id} as a room based on interactive-room class`);
+                roomsIdentified++;
             }
         });
     }
     
-    return document.querySelectorAll('g[data-room="true"]');
+    // Sixth, try to find paths with the expected room IDs directly
+    console.log('Trying to find rooms by looking for specific path IDs');
+    
+    // Explicitly check for paths that match the new pattern room-{X}-1
+    const roomPatternPaths = Array.from(document.querySelectorAll('path'))
+        .filter(path => path.id && (path.id.match(/room-\d+-\d+/) || path.id.match(/room\d+-\d+/)));
+        
+    if (roomPatternPaths.length > 0) {
+        console.log(`Found ${roomPatternPaths.length} paths with room pattern IDs`);
+        roomPatternPaths.forEach(path => {
+            const parentGroup = path.closest('g');
+            if (parentGroup) {
+                parentGroup.setAttribute('data-room', 'true');
+                console.log(`Marked ${parentGroup.id} as a room based on path ID ${path.id}`);
+                roomsIdentified++;
+            } else {
+                // If the path isn't in a group, mark it directly
+                path.setAttribute('data-room', 'true');
+                console.log(`Marked path ${path.id} as a room directly`);
+                roomsIdentified++;
+            }
+        });
+    }
+    
+    // If no rooms were identified by the above methods, fallback to the exclusion method
+    if (roomsIdentified === 0) {
+        console.warn('No rooms identified by attributes or classes. Falling back to exclusion method.');
+        
+        // Exclude the known non-room groups - add or modify based on your SVG structure
+        const excludedIds = ['g199-8', 'g2-8', 'g176-6', 'g187-3', 'g187-2-0', 'g193-6', 'g196-5'];
+        Array.from(allGroups).forEach(group => {
+            // Check if this group has a path child - rooms should have path elements
+            const hasPath = group.querySelector('path') !== null;
+            
+            if (hasPath && !excludedIds.includes(group.id)) {
+                group.setAttribute('data-room', 'true');
+                console.log(`Marked ${group.id} as a room using exclusion method`);
+                roomsIdentified++;
+            } else if (excludedIds.includes(group.id)) {
+                console.log(`Excluded ${group.id} from being a room`);
+            }
+        });
+    }
+
+    // Deduplicate - remove any rooms we may have counted multiple times
+    const allRoomGroups = document.querySelectorAll('g[data-room="true"]');
+    const allRoomPaths = document.querySelectorAll('path[data-room="true"]');
+    
+    // Log all identified rooms 
+    const identifiedRooms = Array.from(allRoomGroups).concat(Array.from(allRoomPaths));
+    console.log(`Total rooms identified: ${identifiedRooms.length} (${allRoomGroups.length} groups, ${allRoomPaths.length} standalone paths)`);
+    
+    // Debug output - list all identified rooms
+    identifiedRooms.forEach((room, index) => {
+        console.log(`Identified room ${index+1}: ${room.tagName} #${room.id}`);
+    });
+    
+    return identifiedRooms;
 }
 
 // Identify rooms and get only the room elements
@@ -48,7 +165,7 @@ let draggedElement = null;
 let startX = 0;
 let startY = 0;
 
-console.log('Drag Drop Setup script loaded - UPDATED VERSION V3');
+console.log('Drag Drop Setup script loaded - UPDATED VERSION');
 console.log(`Found ${rooms.length} draggable room elements after classification`);
 console.log(`Edit button found: ${editButton !== null}`);
 

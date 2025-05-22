@@ -11,15 +11,93 @@ document.addEventListener("DOMContentLoaded", function () {
   let currentSelectedOffice = null;
   let officeActiveStates = {};
 
-  function updateRoomAppearanceById(officeId, isActive) {
-    const roomEl = document.getElementById(`room-${officeId}`);
-    const textEl = document.getElementById(`text${officeId}`);
+  // Log elements found for debugging
+  console.log("Office details panel found:", !!officeDetailsPanel);
+  console.log("Panel office name found:", !!panelOfficeName);
+  console.log("Office active toggle found:", !!officeActiveToggle);
+  console.log("Office status text found:", !!officeStatusText);
+  console.log("Close panel button found:", !!closePanelBtn);
+  console.log("Tooltip found:", !!tooltip);
 
-    if (roomEl) roomEl.classList.toggle("room-inactive", !isActive);
+  function updateRoomAppearanceById(officeId, isActive) {
+    // Look up the office in officesData to get its location
+    const office = officesData.find(o => o.id.toString() === officeId.toString());
+    if (!office) {
+      console.warn(`Office with ID ${officeId} not found in officesData`);
+      return;
+    }
+    
+    const locationStr = office.location || '';
+    
+    // Try multiple ways to find the room group
+    let roomGroup = null;
+    let roomPath = null;
+    
+    // Try by office ID first
+    roomGroup = document.getElementById(`g${officeId}`);
+    
+    // If not found by ID, try to find by location (room-X format)
+    if (!roomGroup && locationStr) {
+      // Extract number from "room-X" format
+      const roomMatch = locationStr.match(/room-(\d+)/);
+      if (roomMatch && roomMatch[1]) {
+        const roomNum = roomMatch[1];
+        
+        // First, try direct path match with the exact format in your SVG
+        roomPath = document.getElementById(`room-${roomNum}-1`);
+        if (roomPath) {
+          console.log(`Found path directly with ID room-${roomNum}-1 for office ${office.name}`);
+          roomGroup = roomPath.closest('g');
+        }
+        
+        // If still not found, try other patterns
+        if (!roomGroup) {
+          const possibleGroupIds = [
+            `g${roomNum}`,              // e.g., g1
+            `g${roomNum}-1`,            // e.g., g1-1
+            `room-${roomNum}`,          // e.g., room-1
+            `room-${roomNum}-1`,        // e.g., room-1-1 (this matches your new SVG structure)
+            `room${roomNum}`,           // e.g., room1 
+            `room${roomNum}-1`,         // e.g., room1-1
+            `g-room-${roomNum}`,        // e.g., g-room-1
+          ];
+          
+          for (const groupId of possibleGroupIds) {
+            roomGroup = document.getElementById(groupId);
+            if (roomGroup) {
+              console.log(`Found group ${groupId} for office ${office.name}`);
+              break;
+            }
+          }
+        }
+      }
+    }
+    
+    // Try to find a specific room element if group not found by any method
+    if (!roomGroup) {
+      console.warn(`Room group not found for office ${officeId} with location ${locationStr}`);
+      return;
+    }
+    
+    // Find the path element inside the group if we haven't already
+    if (!roomPath) {
+      roomPath = roomGroup.querySelector('path');
+    }
+    
+    const textEl = roomGroup.querySelector('text');
+    
+    if (roomPath) {
+      roomPath.classList.toggle("room-inactive", !isActive);
+      roomPath.classList.add("interactive-room"); // Ensure interactive-room class is added
+      roomPath.style.cursor = "pointer";
+    }
     if (textEl) textEl.classList.toggle("text-label-inactive", !isActive);
+    
+    console.log(`Updated appearance for room ${officeId} (${roomGroup.id}), active: ${isActive}`);
   }
 
   function updateOfficeStatusInDB(officeId, newStatus) {
+    console.log(`Updating office status in DB: ${officeId} -> ${newStatus}`);
     fetch("api/update_office_status.php", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -59,6 +137,8 @@ document.addEventListener("DOMContentLoaded", function () {
   if (!tooltip) console.warn("Tooltip element not found.");
 
   if (typeof officesData !== "undefined" && officesData) {
+    console.log(`Processing ${officesData.length} offices`);
+    
     officesData.forEach((office) => {
       const officeId = office.id.toString();
       officeActiveStates[officeId] = office.status === "active";
@@ -80,12 +160,92 @@ document.addEventListener("DOMContentLoaded", function () {
       }
     });
 
+    // Map office data to room groups
     officesData.forEach((office) => {
       const id = office.id;
       const idStr = id.toString();
       const officeName = office.name || `Office ${id}`;
-      const room = document.getElementById(`room-${id}`);
-      const textEl = document.getElementById(`text${id}`); // Target the <text> element
+      
+      // Get location from office data
+      const locationStr = office.location || '';
+      
+      // Find room elements using multiple methods
+      let roomGroup = null;
+      let roomPath = null;
+      
+      // Try first by direct group ID match
+      roomGroup = document.getElementById(`g${id}`);
+      
+      // If not found by ID, try to find by location (room-X format)
+      if (!roomGroup && locationStr) {
+        // Extract number from "room-X" format
+        const roomMatch = locationStr.match(/room-(\d+)/);
+        if (roomMatch && roomMatch[1]) {
+          const roomNum = roomMatch[1];
+          
+          // First, try direct path match with the exact format in your SVG
+          roomPath = document.getElementById(`room-${roomNum}-1`);
+          if (roomPath) {
+            console.log(`Found path directly with ID room-${roomNum}-1 for office ${officeName}`);
+            roomGroup = roomPath.closest('g');
+          }
+          
+          // If still not found, try other patterns
+          if (!roomGroup) {      
+            // Try various group patterns for the room 
+            const possibleGroupIds = [
+              `g${roomNum}`,              // e.g., g1
+              `g${roomNum}-1`,            // e.g., g1-1
+              `room-${roomNum}`,          // e.g., room-1
+              `room-${roomNum}-1`,        // e.g., room-1-1 (this matches your new SVG structure)
+              `room${roomNum}`,           // e.g., room1 
+              `room${roomNum}-1`,         // e.g., room1-1
+              `g-room-${roomNum}`,        // e.g., g-room-1
+            ];
+            
+            for (const groupId of possibleGroupIds) {
+              roomGroup = document.getElementById(groupId);
+              if (roomGroup) {
+                console.log(`Found group ${groupId} for office ${officeName}`);
+                break;
+              }
+            }
+          }
+        }
+      }
+      
+      if (!roomGroup) {
+        console.warn(`Room not found for office ${officeName} (ID: ${id}, Location: ${locationStr})`);
+        return;
+      }
+      
+      console.log(`Processing room for office ${officeName}, using element: ${roomGroup.id}`);
+      
+      // Find the path element inside the group if we haven't already
+      if (!roomPath) {
+        roomPath = roomGroup.querySelector('path');
+        // If we found a path element, try to see if it has a room ID that matches our format
+        if (roomPath && !roomPath.id && locationStr) {
+          const roomMatch = locationStr.match(/room-(\d+)/);
+          if (roomMatch && roomMatch[1]) {
+            console.log(`Found path without ID inside group ${roomGroup.id} for office ${officeName}`);
+          }
+        }
+      }
+      
+      // Find text element for the label
+      const textEl = roomGroup.querySelector('text');
+      
+      // Log what we found for debugging
+      console.log(`  Room path found: ${roomPath ? roomPath.id : 'none'}`);
+      console.log(`  Text element found: ${!!textEl}`);
+      
+      // Set office ID on both group and path
+      roomGroup.dataset.officeId = id;
+      if (roomPath) {
+        roomPath.dataset.officeId = id;
+        roomPath.classList.add("interactive-room"); // Add interactive class to path
+      }
 
       if (textEl) {
         // Apply styling from mobileLabelSetup.js
@@ -137,8 +297,14 @@ document.addEventListener("DOMContentLoaded", function () {
           !officeActiveStates[idStr]
         );
 
-        // Add click listener to textEl to open the panel
+        // Add click listener to textEl to open the panel, but only when not in edit mode
         textEl.addEventListener("click", function (e) {
+          // Check if we're in edit mode - if so, don't open the panel
+          if (document.body.classList.contains('edit-mode-active')) {
+            console.log('In edit mode, not opening panel');
+            return;
+          }
+          
           e.stopPropagation();
           currentSelectedOffice = office;
           panelOfficeName.textContent = office.name || "N/A";
@@ -149,11 +315,17 @@ document.addEventListener("DOMContentLoaded", function () {
           officeStatusText.style.color = isActive ? "#4CAF50" : "#f44336";
 
           officeDetailsPanel.classList.add("open");
+          console.log(`Opening panel for office ${officeName}`);
         });
 
         // Add tooltip to textEl
         if (tooltip) {
           textEl.addEventListener("mousemove", function (e) {
+            // Don't show tooltip if in edit mode
+            if (document.body.classList.contains('edit-mode-active')) {
+              return;
+            }
+            
             tooltip.innerHTML = officeName;
             tooltip.style.display = "block";
             tooltip.style.left = e.pageX + 15 + "px";
@@ -165,13 +337,24 @@ document.addEventListener("DOMContentLoaded", function () {
         }
       }
 
-      if (room) {
-        room.classList.add("interactive-room");
-        room.dataset.officeId = id;
-        room.style.cursor = "pointer";
-        updateRoomAppearanceById(id, officeActiveStates[idStr]);
+      if (roomPath) {
+        roomPath.classList.add("interactive-room");
+        roomPath.style.cursor = "pointer";
+        
+        // Apply active/inactive styling
+        if (!officeActiveStates[idStr]) {
+          roomPath.classList.add("room-inactive");
+          if (textEl) textEl.classList.add("text-label-inactive");
+        }
 
-        room.addEventListener("click", function (e) {
+        // Add click event to the room path, but only when not in edit mode
+        roomPath.addEventListener("click", function (e) {
+          // Check if we're in edit mode - if so, don't open the panel
+          if (document.body.classList.contains('edit-mode-active')) {
+            console.log('In edit mode, not opening panel');
+            return;
+          }
+          
           e.stopPropagation();
           currentSelectedOffice = office;
           panelOfficeName.textContent = office.name || "N/A";
@@ -182,17 +365,23 @@ document.addEventListener("DOMContentLoaded", function () {
           officeStatusText.style.color = isActive ? "#4CAF50" : "#f44336";
 
           officeDetailsPanel.classList.add("open");
+          console.log(`Opening panel for office ${officeName} (click on path)`);
         });
 
         if (tooltip) {
-          room.addEventListener("mousemove", function (e) {
+          roomPath.addEventListener("mousemove", function (e) {
+            // Don't show tooltip if in edit mode
+            if (document.body.classList.contains('edit-mode-active')) {
+              return;
+            }
+            
             tooltip.innerHTML = officeName;
             tooltip.style.display = "block";
             tooltip.style.left = e.pageX + 15 + "px";
             tooltip.style.top = e.pageY + 15 + "px";
           });
 
-          room.addEventListener("mouseout", function () {
+          roomPath.addEventListener("mouseout", function () {
             tooltip.style.display = "none";
           });
         }
@@ -205,12 +394,16 @@ document.addEventListener("DOMContentLoaded", function () {
   closePanelBtn.addEventListener("click", function () {
     officeDetailsPanel.classList.remove("open");
     currentSelectedOffice = null;
+    console.log("Panel closed");
   });
 
   document.getElementById("svg1").addEventListener("click", function (e) {
     if (e.target === this && officeDetailsPanel.classList.contains("open")) {
       officeDetailsPanel.classList.remove("open");
       currentSelectedOffice = null;
+      console.log("Panel closed (clicked outside)");
     }
   });
+  
+  console.log("Label setup complete");
 });
