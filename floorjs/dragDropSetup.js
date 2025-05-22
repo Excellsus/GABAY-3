@@ -1,9 +1,43 @@
-// Get all room elements - UPDATED VERSION V2
-// Use a simpler selector to get all groups first, then filter out the ones we don't want
+// Get all room elements - UPDATED VERSION V3
+// Use a simpler selector to get all groups first
 const allGroups = document.querySelectorAll('g[id^="g"]');
-// Filter out specific groups that should not be draggable
-const excludedIds = ['g199-8', 'g2-8', 'g176-6', 'g187-3', 'g187-2-0', 'g193-6', 'g196-5'];
-const rooms = Array.from(allGroups).filter(group => !excludedIds.includes(group.id));
+
+// Function to identify real rooms
+function identifyRooms() {
+    console.log('Identifying room elements...');
+    
+    // First, check for inkscape:label attributes that contain "room"
+    allGroups.forEach(group => {
+        // Check if this group has a label with "room" in it
+        const labelAttr = group.getAttribute('inkscape:label');
+        if (labelAttr && labelAttr.toLowerCase().includes('room')) {
+            group.setAttribute('data-room', 'true');
+            console.log(`Marked ${group.id} as a room based on label: ${labelAttr}`);
+        }
+    });
+    
+    // If no rooms were identified by labels, fallback to the exclusion method
+    const roomsIdentified = document.querySelectorAll('g[data-room="true"]').length;
+    if (roomsIdentified === 0) {
+        console.warn('No rooms identified by inkscape:label. Falling back to exclusion method.');
+        
+        // Exclude the known non-room groups
+        const excludedIds = ['g199-8', 'g2-8', 'g176-6', 'g187-3', 'g187-2-0', 'g193-6', 'g196-5'];
+        Array.from(allGroups).forEach(group => {
+            if (!excludedIds.includes(group.id)) {
+                group.setAttribute('data-room', 'true');
+                console.log(`Marked ${group.id} as a room using exclusion method`);
+            } else {
+                console.log(`Excluded ${group.id} from being a room`);
+            }
+        });
+    }
+    
+    return document.querySelectorAll('g[data-room="true"]');
+}
+
+// Identify rooms and get only the room elements
+const rooms = identifyRooms();
 
 const editButton = document.getElementById('edit-floorplan-btn');
 const floorPlanContainer = document.querySelector('.floor-plan-container');
@@ -14,8 +48,8 @@ let draggedElement = null;
 let startX = 0;
 let startY = 0;
 
-console.log('Drag Drop Setup script loaded - UPDATED VERSION V2');
-console.log(`Found ${rooms.length} draggable room elements after filtering`);
+console.log('Drag Drop Setup script loaded - UPDATED VERSION V3');
+console.log(`Found ${rooms.length} draggable room elements after classification`);
 console.log(`Edit button found: ${editButton !== null}`);
 
 // Log each room ID for debugging
@@ -199,7 +233,7 @@ function handleMouseMove(e) {
     
     // Find room element under cursor
     const elemUnderCursor = document.elementFromPoint(e.clientX, e.clientY);
-    const roomUnderCursor = elemUnderCursor ? elemUnderCursor.closest('g[id^="g"]') : null;
+    const roomUnderCursor = elemUnderCursor ? elemUnderCursor.closest('g[data-room="true"]') : null;
     
     // Remove previous drag-target class from all rooms
     rooms.forEach(room => {
@@ -209,7 +243,7 @@ function handleMouseMove(e) {
     });
     
     // Add visual feedback for potential drop targets
-    if (roomUnderCursor && rooms.includes(roomUnderCursor) && roomUnderCursor !== draggedElement) {
+    if (roomUnderCursor && roomUnderCursor !== draggedElement) {
         roomUnderCursor.classList.add('drag-target');
         console.log(`Potential drop target: ${roomUnderCursor.id}`);
     }
@@ -239,11 +273,11 @@ function handleMouseUp(e) {
     
     // Find room element under cursor
     const elemUnderCursor = document.elementFromPoint(e.clientX, e.clientY);
-    const dropTarget = elemUnderCursor ? elemUnderCursor.closest('g[id^="g"]') : null;
+    const dropTarget = elemUnderCursor ? elemUnderCursor.closest('g[data-room="true"]') : null;
     
     console.log(`Drop target: ${dropTarget ? dropTarget.id : 'none'}`);
     
-    if (dropTarget && rooms.includes(dropTarget) && dropTarget !== draggedElement) {
+    if (dropTarget && dropTarget !== draggedElement) {
         console.log(`Dropping on target: ${dropTarget.id}`);
         
         // Find the path elements to swap styles
@@ -356,14 +390,9 @@ editButton.addEventListener('click', (e) => {
         const assignments = [];
         const processedRooms = new Set(); // Track processed rooms to prevent duplicates
         
-        document.querySelectorAll('g[id^="g"]').forEach(group => {
+        document.querySelectorAll('g[data-room="true"]').forEach(group => {
             const room = group.querySelector('path');
             const label = group.querySelector('text');
-            
-            // Skip if room has no path or is in our excluded list
-            if (!room || excludedIds.includes(group.id)) {
-                return;
-            }
             
             if (room && !processedRooms.has(group.id)) {
                 // Try to get office ID from data attribute or set a default
