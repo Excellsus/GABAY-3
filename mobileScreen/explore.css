@@ -1,0 +1,235 @@
+@import url("https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap");
+
+/* Basic body reset and bottom padding for nav */
+body {
+  margin: 0;
+  font-family: "Poppins", sans-serif; /* Use Poppins */
+  background-color: #f9f9f9;
+  /* Remove body padding, handle spacing within .content */
+  /* padding-bottom: 70px; */
+}
+
+/* Fixed Header Styles */
+.header {
+  position: fixed; /* Make header fixed */
+  top: 0;
+  left: 0;
+  width: 100%;
+  background-color: #ffffff; /* White background */
+  color: #333;
+  padding: 10px 15px; /* Padding consistent with rooms.css/about.css */
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* Subtle shadow */
+  z-index: 1000; /* Ensure header stays on top */
+  display: flex; /* Use flexbox for layout */
+  justify-content: space-between; /* Space out title/subtitle and actions */
+  align-items: center; /* Vertically center items */
+  box-sizing: border-box; /* Include padding in width calculation */
+  height: 60px; /* Explicit height consistent with feedback.css/office_details.css */
+}
+
+.header-content {
+  flex-grow: 1; /* Allow title/subtitle area to take available space */
+}
+
+/* Adjust existing title/subtitle styles if needed within the fixed header context */
+.header .section-title {
+  margin: 0; /* Remove default margins */
+  font-size: 1.2em; /* Example size adjustment */
+  font-weight: bold;
+  color: #333; /* Reset color if needed */
+}
+
+.header .section-subtitle {
+  margin: 0; /* Remove default margins */
+  font-size: 0.9em; /* Example size adjustment */
+  color: #666;
+}
+
+/* Main Content Area Adjustment */
+.content {
+  /* Adjust padding: Top for header, Right, Bottom for nav, Left */
+  padding: 80px 5px 70px 5px; /* Top(header), Sides, Bottom(nav) */
+  /* Height is now dynamically adjusted by JavaScript based on drawer position */
+  /* height: calc(100vh - 80px - 60px); */ /* Remove fixed height */
+  transition: height 0.2s ease; /* Add transition for smooth height changes */
+  display: flex; /* Use flexbox to manage children */
+  flex-direction: column; /* Stack children vertically */
+  box-sizing: border-box; /* Include padding in height calculation */
+  overflow: hidden; /* Prevent content area itself from scrolling */
+  /* padding-bottom is handled by body */
+}
+
+.sidebar-shadow {
+  box-shadow: 4px 0 6px -1px rgba(0, 0, 0, 0.05),
+    2px 0 4px -1px rgba(0, 0, 0, 0.03);
+}
+.card-shadow {
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05),
+    0 2px 4px -1px rgba(0, 0, 0, 0.03);
+}
+
+/* --- SVG Container Styles (Essential for Pan/Zoom) --- */
+.floor-plan-container {
+  /* transition: transform 0.3s ease-in-out, height 0.3s ease-in-out; */ /* Transitions likely not needed without drawer */
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  /* height: 85%; */ /* Let it fill the flex container */
+  flex-grow: 1; /* Allow this container to grow and fill space in .content */
+  overflow: hidden; /* Hide SVG overflow if pan/zoom handles it */
+}
+
+#svg1 {
+  display: block; /* Helps with layout consistency */
+  width: 100%;
+  height: 100%;
+}
+
+/* --- Optional: Styles for rooms if you add interactions later --- */
+#svg1 path[id^="room"] {
+  /* cursor: grab; */ /* Remove if not dragging */
+  transition: fill 0.2s ease, opacity 0.2s ease, stroke 0.2s ease;
+  stroke: none;
+  stroke-width: 1.07225;
+}
+#svg1 path[id^="room"]:hover {
+  opacity: 0.85; /* Basic hover feedback */
+}
+
+/* --- Bottom Navigation Styles --- */
+.bottom-nav {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  left: 0;
+  width: 100%;
+  background-color: #ffffff;
+  border-top: 1px solid #ccc;
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  padding: 8px 0;
+  box-shadow: 0 -2px 6px rgba(0, 0, 0, 0.08);
+  z-index: 1000;
+}
+
+/* Link Styles within Bottom Navigation */
+/* Link Styles within Bottom Navigation */
+.bottom-nav a {
+  text-decoration: none;
+  color: #333;
+  font-size: 12px;
+  text-align: center;
+  flex: 1;
+}
+
+/* Icon Styles within Bottom Navigation */
+/* Icon Styles within Bottom Navigation */
+.bottom-nav a i {
+  font-size: 20px;
+  display: block;
+  margin-bottom: 4px;
+}
+
+/* Active Link Styles */
+/* Active Link Styles */
+.bottom-nav a.active {
+  color: #04aa6d; /* Green color for active link */
+}
+
+/* --- Details Drawer Styles --- */
+.details-drawer {
+  position: fixed;
+  bottom: 60px; /* Start above the bottom nav (adjust if nav height changes) */
+  left: 0;
+  width: 100%;
+  background-color: #ffffff; /* White background */
+  border-top-left-radius: 16px; /* Rounded corners */
+  border-top-right-radius: 16px;
+  box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.15); /* Softer shadow */
+  z-index: 999; /* Below nav bar (1000) but above content */
+  height: 50vh; /* Default height when open (adjust as needed) */
+  max-height: calc(
+    100vh - 80px - 60px - 20px
+  ); /* Max height: Viewport - Header - Nav - Extra space */
+  transform: translateY(
+    calc(100% - 40px)
+  ); /* Initially mostly hidden, showing handle */
+  transition: transform 0.2s ease; /* Smooth transition for sliding */
+  overflow-y: auto; /* Allow scrolling inside drawer if content overflows */
+  touch-action: none; /* Prevent default browser touch actions like scrolling page */
+  box-sizing: border-box;
+}
+
+.details-drawer.dragging {
+  transition: none; /* Disable transition during drag for responsiveness */
+}
+
+.drawer-handle {
+  height: 40px; /* Height of the draggable/clickable area */
+  width: 100%; /* Full width */
+  cursor: grab; /* Indicate draggable */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  /* Visual indicator (the small line) */
+  position: relative; /* Needed for pseudo-element */
+}
+
+.drawer-handle::before {
+  content: "";
+  display: block;
+  width: 40px; /* Width of the line */
+  height: 5px;
+  background-color: #cccccc; /* Gray line */
+  border-radius: 3px;
+}
+
+.details-drawer:not(.dragging) .drawer-handle:active {
+  cursor: grabbing; /* Indicate active grab */
+}
+
+/* Content inside the drawer */
+.location-info {
+  padding: 0px 20px 20px 20px; /* Padding below handle */
+}
+
+.location-header {
+  display: flex;
+  align-items: center;
+  margin-bottom: 15px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid #eee; /* Separator */
+}
+
+.location-icon {
+  width: 40px; /* Smaller icon */
+  height: 40px;
+  border-radius: 8px; /* Slightly rounded square */
+  background-color: #e8f5e9; /* Light green background */
+  margin-right: 15px;
+  /* Add display flex/center if you put an icon inside */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #2e7d32; /* Darker green for icon */
+}
+
+.location-title h2 {
+  font-size: 1.1em; /* Slightly smaller title */
+  font-weight: 600; /* Medium bold */
+  margin: 0;
+  color: #333;
+}
+
+.detail-row {
+  padding: 10px 0; /* Padding for each detail row */
+  border-bottom: 1px solid #f0f0f0; /* Lighter separator */
+  font-size: 0.9em; /* Standard text size */
+  color: #555;
+  line-height: 1.5;
+}
+
+.detail-row:last-child {
+  border-bottom: none; /* Remove border from last item */
+}

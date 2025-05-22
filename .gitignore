@@ -1,0 +1,38 @@
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# IDE files
+.idea/
+.vscode/
+*.sublime-project
+*.sublime-workspace
+
+# PHP specific
+vendor/
+composer.lock
+.env
+.phpunit.result.cache
+
+# Log files
+*.log
+error_log
+access_log
+
+# Database
+*.sql
+*.sqlite
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+*.swp
+*.swo
+
+# User-specific filesconfig.php

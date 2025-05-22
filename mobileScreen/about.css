@@ -1,0 +1,210 @@
+/* Body Styles */
+body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+  background-color: #f9f9f9;
+}
+
+/* Fixed Header Styles */
+.header {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  background-color: #ffffff;
+  color: #333;
+  padding: 10px 15px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  z-index: 1000;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  box-sizing: border-box;
+}
+
+.header-content {
+  flex-grow: 1;
+}
+
+.header .section-title {
+  margin: 0;
+  font-size: 1.2em;
+  font-weight: bold;
+  color: #333;
+}
+
+.header .section-subtitle {
+  margin: 0;
+  font-size: 0.9em;
+  color: #666;
+}
+
+.header-actions {
+  margin-left: auto; /* Pushes actions to the right */
+  padding-right: 15px; /* Add some padding so icon isn't stuck to the edge */
+}
+
+.header-actions a {
+  color: #333; /* Use a specific color or inherit */
+  text-decoration: none; /* Remove underline */
+  font-size: 1.2rem; /* Adjust icon size if needed */
+  transition: opacity 0.2s ease; /* Smooth hover effect */
+}
+
+.header-actions a:hover {
+  opacity: 0.7; /* Slight fade on hover */
+  cursor: pointer;
+}
+
+/* Content Section Styles */
+.content {
+  padding: 80px 20px 70px 20px;
+}
+
+/* Bottom Navigation Styles */
+.bottom-nav {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  background-color: #ffffff;
+  border-top: 1px solid #ccc;
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  height: 40px;
+  padding: 9.4px 0;
+  box-shadow: 0 -2px 6px rgba(0, 0, 0, 0.08);
+  z-index: 1000;
+}
+
+/* Link Styles within Bottom Navigation */
+.bottom-nav a {
+  text-decoration: none;
+  color: #333;
+  font-size: 12px;
+  text-align: center;
+  flex: 1;
+}
+
+/* Icon Styles within Bottom Navigation */
+.bottom-nav a i {
+  font-size: 20px;
+  display: block;
+  margin-bottom: 4px;
+}
+
+/* Active Link Styles */
+.bottom-nav a.active {
+  color: #04aa6d;
+}
+
+/* Action buttons row */
+.action-buttons {
+  display: flex;
+  justify-content: space-between;
+  margin: 20px 0;
+  border-top: 1px solid #ccc;
+  border-bottom: 1px solid #ccc;
+  padding: 15px 0;
+}
+
+.action-button {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background-color: #fff;
+  border: 1px solid #ddd;
+}
+
+/* Details section */
+.details-section {
+  padding: 0 0 20px 0;
+}
+
+.detail-row {
+  padding: 12px 0;
+  border-bottom: 1px solid #ccc;
+  font-size: 14px;
+  color: #333;
+}
+
+/* About Section Wrapper */
+.about-section {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+/* Individual About Cards */
+.about-card {
+  background-color: #fff;
+  padding: 18px 16px;
+  border-radius: 10px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
+}
+
+/* Headings inside each card */
+.about-card h3 {
+  margin-top: 0;
+  margin-bottom: 8px;
+  font-size: 1.1em;
+  color: #04aa6d;
+}
+
+/* Paragraph text */
+.about-card p {
+  font-size: 14px;
+  color: #444;
+  line-height: 1.6;
+  margin: 0;
+}
+/* Team Section Layout */
+.team-section {
+  padding-bottom: 10px;
+}
+
+/* Team Member Layout */
+.team-member {
+  display: flex;
+  gap: 15px;
+  margin-bottom: 16px;
+  align-items: flex-start;
+}
+
+.member-photo {
+  width: 60px;
+  height: 60px;
+  background-color: #ddd;
+  border-radius: 8px;
+  flex-shrink: 0;
+  background-size: cover;
+  background-position: center;
+}
+
+/* Member Info */
+.member-info {
+  flex-grow: 1;
+}
+
+.member-info h4 {
+  margin: 0 0 5px 0;
+  font-size: 1em;
+  color: #333;
+  display: flex;
+  flex-direction: column;
+}
+
+.role-label {
+  font-size: 0.85em;
+  color: #04aa6d;
+  font-weight: normal;
+  margin-top: 2px;
+}
+
+.member-info p {
+  margin: 0;
+  font-size: 14px;
+  color: #444;
+  line-height: 1.5;
+}

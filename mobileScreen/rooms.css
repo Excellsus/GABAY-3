@@ -1,0 +1,195 @@
+/* Body Styles */
+body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+  background-color: #f9f9f9;
+}
+/* Fixed Header Styles */
+.header {
+  position: fixed; /* Make header fixed */
+  top: 0;
+  left: 0;
+  width: 100%;
+  background-color: #ffffff; /* White background */
+  color: #333;
+  padding: 10px 15px; /* Padding inside the header */
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* Subtle shadow */
+  z-index: 1000; /* Ensure header stays on top */
+  display: flex; /* Use flexbox for layout */
+  justify-content: space-between; /* Space out title/subtitle and actions */
+  align-items: center; /* Vertically center items */
+  box-sizing: border-box; /* Include padding in width calculation */
+}
+
+.header-content {
+  flex-grow: 1; /* Allow title/subtitle area to take available space */
+}
+
+/* Adjust existing title/subtitle styles if needed within the fixed header context */
+.header .section-title {
+  margin: 0; /* Remove default margins */
+  font-size: 1.2em; /* Example size adjustment */
+  font-weight: bold;
+  color: #333; /* Reset color if needed */
+}
+
+.header .section-subtitle {
+  margin: 0; /* Remove default margins */
+  font-size: 0.9em; /* Example size adjustment */
+  color: #666;
+}
+/* Style for the link wrapping the card */
+.room-card-link {
+  text-decoration: none; /* Remove underline */
+  color: inherit; /* Inherit text color from parent/card styles */
+  display: block; /* Make the link behave like a block element */
+}
+
+/* Content Section Styles */
+.content {
+  padding: 80px 20px 20px 20px; /* Add padding-top for fixed header, keep existing side/bottom padding */
+  padding-bottom: 70px; /* Extra space for fixed bottom navigation */
+}
+
+/* Bottom Navigation Styles */
+.bottom-nav {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  background-color: #ffffff;
+  border-top: 1px solid #ccc;
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  height: 40px; /* Example */
+  padding: 9.4px 0; /* Example: 40 + 9.4 + 9.4 = 58.8 */
+  box-shadow: 0 -2px 6px rgba(0, 0, 0, 0.08);
+  z-index: 1000;
+}
+
+/* Link Styles within Bottom Navigation */
+.bottom-nav a {
+  text-decoration: none;
+  color: #333;
+  font-size: 12px;
+  text-align: center;
+  flex: 1;
+}
+
+/* Icon Styles within Bottom Navigation */
+.bottom-nav a i {
+  font-size: 20px;
+  display: block;
+  margin-bottom: 4px;
+}
+
+/* Active Link Styles */
+.bottom-nav a.active {
+  color: #04aa6d; /* Green color for active link */
+}
+/* Action buttons row */
+.action-buttons {
+  display: flex;
+  justify-content: space-between;
+  margin: 20px 0;
+  border-top: 1px solid #ccc;
+  border-bottom: 1px solid #ccc;
+  padding: 15px 0;
+}
+
+.action-button {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background-color: #fff;
+  border: 1px solid #ddd;
+}
+
+/* Details section */
+.details-section {
+  padding: 0 0 20px 0;
+}
+
+.detail-row {
+  padding: 12px 0;
+  border-bottom: 1px solid #ccc;
+  font-size: 14px;
+  color: #333;
+}
+/* General content spacing */
+.content {
+  padding: 80px 20px 20px 20px; /* Add padding-top for fixed header, keep existing side/bottom padding */
+  padding-bottom: 70px; /* Extra space for fixed bottom navigation */
+  /* Ensure padding-top is sufficient to clear the fixed header */
+  padding: 80px 20px 70px 20px; /* Top(header), Right, Bottom(nav), Left */
+}
+
+/* Title styling */
+.section-title {
+  font-size: 24px;
+  font-weight: 600;
+  margin-bottom: 15px;
+  color: #2e7d32; /* Green tone */
+}
+
+/* Grid for room list */
+.rooms-grid {
+  display: grid;
+  gap: 16px;
+  grid-template-columns: 1fr;
+}
+
+/* Room card */
+.room-card {
+  background-color: #fff;
+  border: 1px solid #ddd;
+  /*border-bottom: 5px solid #839584;*/
+  padding: 16px;
+  display: flex;
+  align-items: flex-start;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  transition: transform 0.2s ease;
+}
+
+.room-card:hover {
+  transform: translateY(-3px);
+}
+
+/* Room icon */
+.room-icon {
+  font-size: 28px;
+  margin-right: 15px;
+  color: #2e7d32;
+}
+
+/* Room info */
+.room-info {
+  flex: 1;
+}
+
+.room-name {
+  font-size: 18px;
+  font-weight: 500;
+  margin: 0 0 5px;
+}
+
+.room-desc {
+  font-size: 14px;
+  color: #555;
+  margin: 0;
+}
+
+/* Responsive layout */
+@media (min-width: 600px) {
+  .rooms-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (min-width: 900px) {
+  .rooms-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}

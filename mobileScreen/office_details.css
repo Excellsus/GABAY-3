@@ -1,0 +1,72 @@
+/* Inherit base styles if you have a common CSS file */
+/* @import url('base.css'); */
+
+body {
+  margin: 0;
+  font-family: sans-serif;
+  background-color: #f9f9f9;
+  /* Ensure body doesn't scroll if content fits */
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Header Styles (similar to other pages) */
+.header {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  background-color: #fff;
+  z-index: 1000;
+  padding: 10px 15px; /* Reduced padding slightly */
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  display: flex;
+  align-items: center;
+  height: 60px;
+  box-sizing: border-box;
+}
+
+.header-back a {
+  color: #333;
+  font-size: 1.2em;
+  margin-right: 15px;
+  text-decoration: none;
+}
+
+.header-content {
+  flex-grow: 1;
+}
+.header-actions {
+  width: 40px; /* Placeholder */
+} /* Adjust if actions are added */
+.header .section-title {
+  margin: 0;
+  font-size: 1.1em;
+  font-weight: bold;
+  color: #333;
+}
+.header .section-subtitle {
+  margin: 0;
+  font-size: 0.85em;
+  color: #666;
+}
+
+/* Main Content Area */
+.content {
+  padding: 75px 20px 20px 20px; /* Adjust padding-top for fixed header */
+  flex-grow: 1; /* Allow content to fill remaining space */
+  overflow-y: auto; /* Allow scrolling if services list is long */
+}
+
+.office-services p {
+  line-height: 1.6;
+  color: #333;
+  white-space: pre-wrap; /* Respect line breaks from the database */
+}
+
+.error-message {
+  color: red;
+  font-weight: bold;
+  text-align: center;
+}
