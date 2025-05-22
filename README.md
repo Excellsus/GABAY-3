@@ -23,7 +23,7 @@ GABAY is a comprehensive office navigation system designed for the Provincial Ca
 
 1. Clone this repository to your web server directory:
    ```
-   git clone https://github.com/YOUR-USERNAME/GABAY.git
+   git clone https://github.com/Excellsus/GABAY-3.git
    ```
 
 2. Ensure you have a web server with PHP support (e.g., XAMPP, WAMP)
@@ -62,4 +62,4 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 
 ## Contributors
 
-- [Your Name](https://github.com/YOUR-USERNAME) 
+- [Excellsus](https://github.com/Excellsus) 
