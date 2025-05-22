@@ -1635,16 +1635,13 @@ try {
         -->
     </div>
 
-
-
-     <script src="https://cdn.jsdelivr.net/npm/svg-pan-zoom@3.6.1/dist/svg-pan-zoom.min.js"></script>
-     <script src="floorjs/panZoomSetup.js"></script> <!-- Link to the new JS file -->
-     <script>
-        // Pass PHP office data to JavaScript
+          <!-- Load libraries and scripts in the correct order -->     <script src="https://cdn.jsdelivr.net/npm/svg-pan-zoom@3.6.1/dist/svg-pan-zoom.min.js"></script>     <script>        // Pass PHP office data to JavaScript
         const officesData = <?php echo json_encode($offices); ?>;
         console.log("Offices Data Loaded:", officesData); // For debugging
-     </script>
-   <script src="./floorjs/labelSetup.js"></script> <!-- Add the labeling script -->
-   <script src="./floorjs/dragDropSetup.js"></script>
+        
+        // Force immediate cache refresh with unique version
+        const scriptVersion = '<?php echo date("YmdHis"); ?>';
+        console.log("Loading scripts with version:", scriptVersion);
+     </script>     <!-- First, load the pan-zoom setup -->     <script src="floorjs/panZoomSetup.js?v=<?php echo time(); ?>"></script>          <!-- Then, load the label setup -->     <script src="./floorjs/labelSetup.js?v=<?php echo time(); ?>"></script>          <!-- Finally, load the drag-drop setup that depends on both -->     <script src="./floorjs/dragDropSetup.js?v=<?php echo time(); ?>"></script>
    </body>
  </html>

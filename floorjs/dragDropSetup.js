@@ -1,12 +1,27 @@
-// Get all room elements
-const rooms = document.querySelectorAll('[id^="room-"]');
+// Get all room elements - UPDATED VERSION V2
+// Use a simpler selector to get all groups first, then filter out the ones we don't want
+const allGroups = document.querySelectorAll('g[id^="g"]');
+// Filter out specific groups that should not be draggable
+const excludedIds = ['g199-8', 'g2-8', 'g176-6', 'g187-3', 'g187-2-0', 'g193-6', 'g196-5'];
+const rooms = Array.from(allGroups).filter(group => !excludedIds.includes(group.id));
+
 const editButton = document.getElementById('edit-floorplan-btn');
+const floorPlanContainer = document.querySelector('.floor-plan-container');
 let isEditMode = false;
 let isDragging = false;
 let isOverRoom = false;
 let draggedElement = null;
 let startX = 0;
 let startY = 0;
+
+console.log('Drag Drop Setup script loaded - UPDATED VERSION V2');
+console.log(`Found ${rooms.length} draggable room elements after filtering`);
+console.log(`Edit button found: ${editButton !== null}`);
+
+// Log each room ID for debugging
+rooms.forEach((room, index) => {
+    console.log(`Room ${index+1}: ${room.id}`);
+});
 
 // Function to create a ghost image for dragging
 function createGhostImage(element) {
@@ -24,28 +39,80 @@ function createGhostImage(element) {
 
 // Function to enable drag and drop
 function enableDragAndDrop() {
-    console.log('Enabling drag and drop');
+    console.log('Enabling drag and drop - edit mode activated');
+    
+    // Add visual indicator for edit mode
+    document.body.classList.add('edit-mode-active');
+    floorPlanContainer.classList.add('edit-mode-active');
+    
+    // Display a message to the user
+    const editModeMsg = document.createElement('div');
+    editModeMsg.id = 'edit-mode-message';
+    editModeMsg.className = 'edit-mode-message';
+    editModeMsg.textContent = 'Edit Mode: Drag rooms to reposition them';
+    floorPlanContainer.appendChild(editModeMsg);
+    
+    // Make each room draggable
     rooms.forEach(room => {
-        room.style.cursor = 'move';
+        // Find the path element inside the group
+        const pathElement = room.querySelector('path');
+        if (!pathElement) {
+            console.warn(`No path element found in room group ${room.id}`);
+            return;
+        }
+        
+        room.classList.add('draggable');
+        
+        // Store original data for later use
+        if (!room.dataset.originalId) {
+            room.dataset.originalId = room.id;
+        }
         
         // Add mouse event listeners
         room.addEventListener('mousedown', handleMouseDown, true);
         room.addEventListener('mouseenter', handleRoomMouseEnter, true);
         room.addEventListener('mouseleave', handleRoomMouseLeave, true);
+
+        console.log(`Added event listeners to room ${room.id}`);
     });
+    
+    // Disable pan and zoom initially - we'll re-enable it when not over a room
+    if (window.panZoom) {
+        window.panZoom.disablePan();
+        window.panZoom.disableZoom();
+        console.log('Pan and zoom temporarily disabled in edit mode');
+    }
 }
 
 // Function to disable drag and drop
 function disableDragAndDrop() {
-    console.log('Disabling drag and drop');
+    console.log('Disabling drag and drop - returning to view mode');
+    
+    // Remove edit mode indicator
+    document.body.classList.remove('edit-mode-active');
+    floorPlanContainer.classList.remove('edit-mode-active');
+    
+    // Remove edit mode message if it exists
+    const editModeMsg = document.getElementById('edit-mode-message');
+    if (editModeMsg) {
+        editModeMsg.remove();
+    }
+    
     rooms.forEach(room => {
-        room.style.cursor = 'default';
+        room.classList.remove('draggable');
         
         // Remove event listeners
         room.removeEventListener('mousedown', handleMouseDown, true);
         room.removeEventListener('mouseenter', handleRoomMouseEnter, true);
         room.removeEventListener('mouseleave', handleRoomMouseLeave, true);
     });
+    
+    // Re-enable panning and zooming
+    if (window.panZoom) {
+        window.panZoom.enablePan();
+        window.panZoom.enableZoom();
+        console.log('Pan and zoom re-enabled in view mode');
+    }
 }
 
 // Mouse enter/leave handlers for rooms
@@ -53,10 +120,19 @@ function handleRoomMouseEnter(e) {
     if (isEditMode) {
         e.stopPropagation();
         isOverRoom = true;
+        console.log(`Mouse entered room: ${e.currentTarget.id}`);
+        
+        // In edit mode, disable pan/zoom when hovering over a room
         if (window.panZoom) {
             window.panZoom.disablePan();
             window.panZoom.disableZoom();
+            console.log('Disabled pan/zoom - mouse over room in edit mode');
+        } else {
+            console.warn('panZoom instance not found on window object');
         }
+        
+        // Highlight the room to indicate it can be dragged
+        e.currentTarget.classList.add('room-hover');
     }
 }
 
@@ -64,9 +140,16 @@ function handleRoomMouseLeave(e) {
     if (isEditMode) {
         e.stopPropagation();
         isOverRoom = false;
+        console.log(`Mouse left room: ${e.currentTarget.id}`);
+        
+        // Remove hover highlight
+        e.currentTarget.classList.remove('room-hover');
+        
+        // Only re-enable pan/zoom if we're not currently dragging
         if (window.panZoom && !isDragging) {
             window.panZoom.enablePan();
             window.panZoom.enableZoom();
+            console.log('Enabled pan/zoom - mouse left room in edit mode');
         }
     }
 }
@@ -80,7 +163,12 @@ function handleMouseDown(e) {
     
     isDragging = true;
     window.isDragging = true; // Set global dragging state
-    draggedElement = e.target;
+    draggedElement = e.currentTarget; // Use currentTarget to get the room group, not just the path
+    
+    console.log(`Started dragging room: ${draggedElement.id}`);
+    
+    // Add dragging class for visual feedback
+    draggedElement.classList.add('dragging');
     
     // Get the initial mouse position
     startX = e.clientX;
@@ -97,6 +185,9 @@ function handleMouseDown(e) {
     if (window.panZoom) {
         window.panZoom.disablePan();
         window.panZoom.disableZoom();
+        console.log('Disabled pan/zoom for dragging');
+    } else {
+        console.warn('panZoom instance not found on window object');
     }
 }
 
@@ -106,16 +197,21 @@ function handleMouseMove(e) {
     e.stopPropagation();
     e.preventDefault();
     
+    // Find room element under cursor
+    const elemUnderCursor = document.elementFromPoint(e.clientX, e.clientY);
+    const roomUnderCursor = elemUnderCursor ? elemUnderCursor.closest('g[id^="g"]') : null;
+    
+    // Remove previous drag-target class from all rooms
+    rooms.forEach(room => {
+        if (room !== draggedElement) {
+            room.classList.remove('drag-target');
+        }
+    });
+    
     // Add visual feedback for potential drop targets
-    const dropTarget = document.elementFromPoint(e.clientX, e.clientY)?.closest('[id^="room-"]');
-    if (dropTarget && dropTarget !== draggedElement) {
-        dropTarget.style.outline = '2px dashed #1A5632';
-    } else {
-        rooms.forEach(room => {
-            if (room !== draggedElement) {
-                room.style.outline = 'none';
-            }
-        });
+    if (roomUnderCursor && rooms.includes(roomUnderCursor) && roomUnderCursor !== draggedElement) {
+        roomUnderCursor.classList.add('drag-target');
+        console.log(`Potential drop target: ${roomUnderCursor.id}`);
     }
 }
 
@@ -128,86 +224,103 @@ function handleMouseUp(e) {
     isDragging = false;
     window.isDragging = false; // Reset global dragging state
     
-    // Reset opacity
+    // Reset opacity and remove dragging class
     draggedElement.style.opacity = '1';
+    draggedElement.classList.remove('dragging');
     
-    // Remove outline from all rooms
+    // Remove drag-target class from all rooms
     rooms.forEach(room => {
-        room.style.outline = 'none';
+        room.classList.remove('drag-target');
     });
     
     // Remove event listeners
     document.removeEventListener('mousemove', handleMouseMove, true);
     document.removeEventListener('mouseup', handleMouseUp, true);
     
-    // Check for drop target
-    const dropTarget = document.elementFromPoint(e.clientX, e.clientY)?.closest('[id^="room-"]');
-    if (dropTarget && dropTarget !== draggedElement) {
-        console.log('Dropping on target:', dropTarget.id);
+    // Find room element under cursor
+    const elemUnderCursor = document.elementFromPoint(e.clientX, e.clientY);
+    const dropTarget = elemUnderCursor ? elemUnderCursor.closest('g[id^="g"]') : null;
+    
+    console.log(`Drop target: ${dropTarget ? dropTarget.id : 'none'}`);
+    
+    if (dropTarget && rooms.includes(dropTarget) && dropTarget !== draggedElement) {
+        console.log(`Dropping on target: ${dropTarget.id}`);
         
-        // Get the colors
-        const draggedColor = draggedElement.getAttribute('style').match(/fill:(.*?);/)[1];
-        const targetColor = dropTarget.getAttribute('style').match(/fill:(.*?);/)[1];
+        // Find the path elements to swap styles
+        const draggedPath = draggedElement.querySelector('path');
+        const targetPath = dropTarget.querySelector('path');
         
-        console.log('Before swap - Colors:', {
-            draggedElement: {
-                id: draggedElement.id,
-                color: draggedColor
-            },
-            dropTarget: {
-                id: dropTarget.id,
-                color: targetColor
-            }
-        });
-        
-        // Swap the colors
-        if (draggedColor && targetColor) {
-            // Update the style attribute with the new colors
-            draggedElement.setAttribute('style', draggedElement.getAttribute('style').replace(draggedColor, targetColor));
-            dropTarget.setAttribute('style', dropTarget.getAttribute('style').replace(targetColor, draggedColor));
+        if (draggedPath && targetPath) {
+            // Get the current styles
+            const draggedStyle = window.getComputedStyle(draggedPath);
+            const targetStyle = window.getComputedStyle(targetPath);
             
-            // Swap the data-office-id attributes
-            const draggedOfficeId = draggedElement.dataset.officeId;
-            const targetOfficeId = dropTarget.dataset.officeId;
-            draggedElement.dataset.officeId = targetOfficeId;
-            dropTarget.dataset.officeId = draggedOfficeId;
+            const draggedFill = draggedStyle.fill;
+            const targetFill = targetStyle.fill;
             
-            console.log('After swap - Colors and IDs:', {
+            console.log('Before swap - Colors:', {
                 draggedElement: {
                     id: draggedElement.id,
-                    color: draggedElement.getAttribute('style').match(/fill:(.*?);/)[1],
-                    officeId: draggedElement.dataset.officeId
+                    fill: draggedFill
                 },
                 dropTarget: {
                     id: dropTarget.id,
-                    color: dropTarget.getAttribute('style').match(/fill:(.*?);/)[1],
-                    officeId: dropTarget.dataset.officeId
+                    fill: targetFill
                 }
             });
             
-            // Get the parent group elements
-            const draggedGroup = draggedElement.closest('g');
-            const targetGroup = dropTarget.closest('g');
+            // Swap fills
+            draggedPath.style.fill = targetFill;
+            targetPath.style.fill = draggedFill;
             
-            if (draggedGroup && targetGroup) {
-                // Get the text elements (they are siblings of the paths)
-                const draggedLabel = draggedGroup.querySelector('text');
-                const targetLabel = targetGroup.querySelector('text');
+            // Swap office IDs if they exist
+            if (draggedPath.dataset.officeId && targetPath.dataset.officeId) {
+                const draggedOfficeId = draggedPath.dataset.officeId;
+                const targetOfficeId = targetPath.dataset.officeId;
+                draggedPath.dataset.officeId = targetOfficeId;
+                targetPath.dataset.officeId = draggedOfficeId;
                 
-                // Swap the labels
-                if (draggedLabel && targetLabel) {
-                    const draggedText = draggedLabel.textContent;
-                    const targetText = targetLabel.textContent;
-                    
-                    console.log('Swapping labels:', {
-                        from: draggedText,
-                        to: targetText
-                    });
-                    
-                    draggedLabel.textContent = targetText;
-                    targetLabel.textContent = draggedText;
-                }
+                console.log(`Swapped office IDs: ${draggedOfficeId} and ${targetOfficeId}`);
+            } else {
+                console.warn('Office IDs not found on one or both paths');
             }
+            
+            // Swap labels
+            const draggedText = draggedElement.querySelector('text');
+            const targetText = dropTarget.querySelector('text');
+            
+            if (draggedText && targetText) {
+                // Get all tspans in each text element
+                const draggedTspans = draggedText.querySelectorAll('tspan');
+                const targetTspans = targetText.querySelectorAll('tspan');
+                
+                // Store the text content
+                const draggedContent = Array.from(draggedTspans).map(tspan => tspan.textContent);
+                const targetContent = Array.from(targetTspans).map(tspan => tspan.textContent);
+                
+                console.log('Swapping text content:', {
+                    from: draggedContent,
+                    to: targetContent
+                });
+                
+                // Swap content
+                if (draggedTspans.length && targetTspans.length) {
+                    for (let i = 0; i < Math.min(draggedTspans.length, targetTspans.length); i++) {
+                        draggedTspans[i].textContent = targetContent[i] || '';
+                        targetTspans[i].textContent = draggedContent[i] || '';
+                    }
+                } else {
+                    // Fallback to swapping entire text content
+                    const draggedContent = draggedText.textContent;
+                    const targetContent = targetText.textContent;
+                    draggedText.textContent = targetContent;
+                    targetText.textContent = draggedContent;
+                }
+            } else {
+                console.warn('Text elements not found for swapping');
+            }
+        } else {
+            console.warn('Path elements not found for swapping styles');
         }
     }
     
@@ -215,6 +328,7 @@ function handleMouseUp(e) {
     if (window.panZoom && !isOverRoom) {
         window.panZoom.enablePan();
         window.panZoom.enableZoom();
+        console.log('Re-enabled pan/zoom after drop');
     }
     
     draggedElement = null;
@@ -236,35 +350,53 @@ editButton.addEventListener('click', (e) => {
     } else {
         editButton.textContent = 'Edit';
         disableDragAndDrop();
-        // Re-enable panning when exiting edit mode
-        if (window.panZoom) {
-            window.panZoom.enablePan();
-            window.panZoom.enableZoom();
-        }
+        
         // --- NEW: Save room assignments ---
         // Collect current room-label assignments
         const assignments = [];
         const processedRooms = new Set(); // Track processed rooms to prevent duplicates
         
-        document.querySelectorAll('g').forEach(group => {
-            const room = group.querySelector('path[id^="room-"]');
+        document.querySelectorAll('g[id^="g"]').forEach(group => {
+            const room = group.querySelector('path');
             const label = group.querySelector('text');
-            if (room && label && !processedRooms.has(room.id)) {
-                const officeId = room.dataset.officeId; // Get office ID from data attribute
+            
+            // Skip if room has no path or is in our excluded list
+            if (!room || excludedIds.includes(group.id)) {
+                return;
+            }
+            
+            if (room && !processedRooms.has(group.id)) {
+                // Try to get office ID from data attribute or set a default
+                const officeId = room.dataset.officeId || group.id.replace(/\D/g, '');
+                
                 if (!officeId) {
-                    console.error('No office ID found for room:', room.id);
+                    console.error('No office ID found for room:', group.id);
                     return;
                 }
-                processedRooms.add(room.id); // Mark this room as processed
+                
+                processedRooms.add(group.id); // Mark this room as processed
+                
+                // Get text content if label exists
+                let labelText = "";
+                if (label) {
+                    if (label.querySelectorAll('tspan').length > 0) {
+                        const tspans = label.querySelectorAll('tspan');
+                        labelText = Array.from(tspans).map(tspan => tspan.textContent).join(' ');
+                    } else {
+                        labelText = label.textContent.trim();
+                    }
+                }
+                
                 console.log('Found room:', {
-                    roomId: room.id,
-                    label: label.textContent.trim(),
+                    roomId: group.id,
+                    label: labelText || 'No label',
                     officeId: officeId
                 });
+                
                 assignments.push({
-                    roomId: room.id, // e.g., 'room-1'
-                    label: label.textContent.trim(),
-                    officeId: officeId // Include the office ID
+                    roomId: group.id,
+                    label: labelText || 'Room ' + officeId,
+                    officeId: officeId
                 });
             }
         });
@@ -277,8 +409,8 @@ editButton.addEventListener('click', (e) => {
         
         console.log('Sending assignments to server:', assignments);
         
-        // Send assignments to the server
-        fetch('saveOffice.php', {
+        // Send assignments to the server - use savePositions.php instead of saveOffice.php
+        fetch('savePositions.php', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ assignments })
@@ -304,5 +436,26 @@ editButton.addEventListener('click', (e) => {
             alert('Error saving room positions: ' + err);
         });
         // --- END NEW ---
+    }
+});
+
+// Wait for DOM to be fully loaded
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('DOM fully loaded in dragDropSetup.js');
+    
+    // Check if panZoom object exists in window scope
+    if (!window.panZoom) {
+        console.warn('panZoom object not found in window scope. Wait for it to be available.');
+        
+        // Set a small delay to check again
+        setTimeout(() => {
+            if (window.panZoom) {
+                console.log('panZoom object found after delay');
+            } else {
+                console.error('panZoom object still not available. Check script load order.');
+            }
+        }, 1000);
+    } else {
+        console.log('panZoom object found in window scope');
     }
 });

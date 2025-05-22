@@ -14,10 +14,11 @@ body {
 /* --- SVG Container Styles (Essential for Pan/Zoom) --- */
 .floor-plan-container {
   width: 100%;
-  height: 70vh; /* Adjust height as needed */
+  height: 70vh; /* Set to 70% of viewport height */
   border: 1px solid #ccc; /* For debugging layout */
   overflow: hidden; /* Important for svg-pan-zoom */
   background-color: #f8f9fa; /* Light background for contrast */
+  position: relative; /* Ensure relative positioning */
 }
 #svg1 {
   display: block; /* Helps with layout consistency */
@@ -25,15 +26,121 @@ body {
   height: 100%;
 }
 
-/* --- Optional: Styles for rooms if you add interactions later --- */
-#svg1 path[id^="room"] {
-  /* cursor: grab; */ /* Remove if not dragging */
-  transition: fill 0.2s ease, opacity 0.2s ease, stroke 0.2s ease;
-  stroke: none;
-  stroke-width: 1.07225;
+/* --- SVG Room Styles --- */
+/* General styles for all paths in g elements */
+g[id^="g"] path {
+  transition: fill 0.3s ease, opacity 0.3s ease, stroke 0.3s ease, outline 0.3s ease;
 }
-#svg1 path[id^="room"]:hover {
-  opacity: 0.85; /* Basic hover feedback */
+
+/* Hover styles for room paths */
+g[id^="g"]:hover path {
+  opacity: 0.9;
+  stroke: #333;
+  stroke-width: 0.8px;
+}
+
+/* Active room interaction styles */
+.interactive-room {
+  cursor: pointer;
+}
+
+/* Drag and drop related styles */
+/* When in edit mode, add a strong visual indicator */
+.edit-mode-active .floor-plan-container {
+  border: 2px solid #c62828;
+  box-shadow: 0 0 10px rgba(198, 40, 40, 0.3);
+}
+
+.edit-mode-active #edit-floorplan-btn {
+  background-color: #c62828 !important;
+  box-shadow: 0 0 5px rgba(198, 40, 40, 0.5);
+}
+
+/* Draggable indicator */
+.draggable {
+  cursor: move !important;
+}
+
+/* Style for active dragging */
+g[id^="g"].dragging {
+  opacity: 0.6 !important;
+}
+
+g[id^="g"].dragging path {
+  filter: brightness(1.2);
+}
+
+/* Style for potential drop targets */
+g[id^="g"].drag-target {
+  outline: 2px dashed #1A5632;
+  outline-offset: 2px;
+}
+
+g[id^="g"].drag-target path {
+  stroke: #1A5632 !important;
+  stroke-width: 1.5px !important;
+  stroke-dasharray: 4;
+  animation: pulse 1s infinite alternate;
+}
+
+/* Pulse animation for drop targets */
+@keyframes pulse {
+  from { stroke-opacity: 0.5; }
+  to { stroke-opacity: 1; }
+}
+
+/* Inactive rooms styling */
+.room-inactive {
+  fill: #cccccc !important;
+  stroke: #999999 !important;
+  opacity: 0.7 !important;
+}
+
+.text-label-inactive {
+  fill: #888888 !important;
+  opacity: 0.7 !important;
+}
+
+/* Tooltip styling */
+#floorplan-tooltip {
+  background-color: rgba(0, 0, 0, 0.8) !important;
+  color: white !important;
+  padding: 5px 10px !important;
+  border-radius: 4px !important;
+  font-size: 12px !important;
+  z-index: 9999 !important;
+  pointer-events: none !important;
+  transition: opacity 0.2s ease-in-out !important;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2) !important;
+  max-width: 200px !important;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+}
+
+/* Edit button styling */
+#edit-floorplan-btn {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  z-index: 100;
+  padding: 8px 15px;
+  background-color: #1A5632;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: background-color 0.3s ease, transform 0.2s ease;
+}
+
+#edit-floorplan-btn:hover {
+  background-color: #0D3018;
+  transform: translateY(-2px);
+}
+
+#edit-floorplan-btn:active {
+  transform: translateY(0);
 }
 
 /* General Styles */
@@ -742,4 +849,169 @@ input:checked + .slider:before {
 .text-label-inactive {
   fill: #888888 !important; /* Dim the text of inactive rooms */
   /* text-decoration: line-through; */ /* Optional: strike-through */
+}
+
+/* Add CSS styles for the edit mode and hover effects */
+
+/* Edit mode indicator */
+.edit-mode-active {
+  cursor: default;
+}
+
+.floor-plan-container.edit-mode-active {
+  border: 2px dashed #1A5632;
+  background-color: rgba(232, 245, 233, 0.2);
+}
+
+/* Edit mode message */
+.edit-mode-message {
+  position: absolute;
+  top: 50px;
+  left: 50%;
+  transform: translateX(-50%);
+  background-color: #1A5632;
+  color: white;
+  padding: 8px 15px;
+  border-radius: 4px;
+  font-size: 14px;
+  z-index: 100;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+}
+
+/* Room hover and dragging styles */
+.draggable {
+  cursor: move;
+}
+
+.room-hover {
+  filter: brightness(1.2);
+  outline: 2px dashed #1A5632;
+  outline-offset: 2px;
+}
+
+.dragging {
+  cursor: grabbing;
+  filter: brightness(0.8);
+  outline: 2px solid #1A5632;
+}
+
+.drag-target {
+  outline: 3px dashed #FFD700;
+  filter: brightness(1.3);
+  cursor: crosshair;
+}
+
+/* Existing styles for the floor plan */
+
+/* Tooltip styles */
+#floorplan-tooltip {
+  position: absolute;
+  background-color: rgba(26, 86, 50, 0.9);
+  color: white;
+  padding: 5px 10px;
+  border-radius: 4px;
+  font-size: 12px;
+  z-index: 1000;
+  pointer-events: none;
+}
+
+/* Office details panel */
+.office-details-panel {
+  position: absolute;
+  top: 20px;
+  right: -300px;
+  width: 280px;
+  background-color: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+  padding: 15px;
+  z-index: 50;
+  transition: right 0.3s ease;
+}
+
+.office-details-panel.open {
+  right: 20px;
+}
+
+.close-panel-btn {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background: none;
+  border: none;
+  font-size: 20px;
+  cursor: pointer;
+  color: #666;
+}
+
+.panel-section {
+  margin-bottom: 15px;
+}
+
+.panel-section h4 {
+  margin-top: 0;
+  margin-bottom: 8px;
+  color: #1A5632;
+}
+
+/* Toggle switch for office status */
+.switch {
+  position: relative;
+  display: inline-block;
+  width: 50px;
+  height: 24px;
+  margin-right: 10px;
+}
+
+.switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: #ccc;
+  transition: .4s;
+}
+
+.slider:before {
+  position: absolute;
+  content: "";
+  height: 18px;
+  width: 18px;
+  left: 3px;
+  bottom: 3px;
+  background-color: white;
+  transition: .4s;
+}
+
+input:checked + .slider {
+  background-color: #1A5632;
+}
+
+input:focus + .slider {
+  box-shadow: 0 0 1px #1A5632;
+}
+
+input:checked + .slider:before {
+  transform: translateX(26px);
+}
+
+.slider.round {
+  border-radius: 34px;
+}
+
+.slider.round:before {
+  border-radius: 50%;
+}
+
+/* Card shadow for the floor plan container */
+.card-shadow {
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 }
